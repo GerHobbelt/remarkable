@@ -1,4 +1,4 @@
-/*! remarkable 1.5.0 https://github.com//jonschlinkert/remarkable @license MIT */!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Remarkable=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/*! remarkable 1.6.0 https://github.com//jonschlinkert/remarkable @license MIT */(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Remarkable = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // List of valid entities
 //
 // Generate with ./support/entities.js script
@@ -2434,25 +2434,32 @@ module.exports = [
 ];
 
 },{}],5:[function(require,module,exports){
-// Utilities
-//
 'use strict';
 
+/**
+ * Utility functions
+ */
 
-function _class(obj) { return Object.prototype.toString.call(obj); }
-
-function isString(obj) { return _class(obj) === '[object String]'; }
-
-var _hasOwnProperty = Object.prototype.hasOwnProperty;
-
-function has(object, key) {
-  return object ? _hasOwnProperty.call(object, key) : false;
+function typeOf(obj) {
+  return Object.prototype.toString.call(obj);
 }
 
-// Merge objects
+function isString(obj) {
+  return typeOf(obj) === '[object String]';
+}
+
+var hasOwn = Object.prototype.hasOwnProperty;
+
+function has(object, key) {
+  return object
+    ? hasOwn.call(object, key)
+    : false;
+}
+
+// Extend objects
 //
 function assign(obj /*from1, from2, from3, ...*/) {
-  var sources = Array.prototype.slice.call(arguments, 1);
+  var sources = [].slice.call(arguments, 1);
 
   sources.forEach(function (source) {
     if (!source) { return; }
@@ -2740,20 +2747,19 @@ module.exports = {
 
     // Double + single quotes replacement pairs, when typographer enabled,
     // and smartquotes on. Set doubles to '«»' for Russian, '„“' for German.
-    quotes: '“”‘’',
+    quotes:       '“”‘’',
 
     // Highlighter function. Should return escaped HTML,
     // or '' if input not changed
     //
     // function (/*str, lang*/) { return ''; }
     //
-    highlight: null,
+    highlight:     null,
 
-    maxNesting:   20            // Internal protection, recursion limit
+    maxNesting:    20            // Internal protection, recursion limit
   },
 
   components: {
-
     // Don't restrict core/block/inline rules
     core: {},
     block: {},
@@ -2764,19 +2770,15 @@ module.exports = {
 },{}],9:[function(require,module,exports){
 'use strict';
 
-
 var replaceEntities = require('../common/utils').replaceEntities;
-
 
 module.exports = function normalizeLink(url) {
   var normalized = replaceEntities(url);
-
-  // We don't care much about result of mailformed URIs,
-  // but shoud not throw exception.
+  // We shouldn't care about the result of malformed URIs,
+  // and should not throw an exception.
   try {
     normalized = decodeURI(normalized);
-  } catch (__) {}
-
+  } catch (err) {}
   return encodeURI(normalized);
 };
 
@@ -2791,17 +2793,22 @@ module.exports = function normalizeReference(str) {
 };
 
 },{}],11:[function(require,module,exports){
-// Parse link destination
-//
-// on success it returns a string and updates state.pos;
-// on failure it returns null
-//
 'use strict';
 
 
 var normalizeLink = require('./normalize_link');
 var unescapeMd    = require('../common/utils').unescapeMd;
 
+/**
+ * Parse link destination
+ *
+ *   - on success it returns a string and updates state.pos;
+ *   - on failure it returns null
+ *
+ * @param  {Object} state
+ * @param  {Number} pos
+ * @api private
+ */
 
 module.exports = function parseLinkDestination(state, pos) {
   var code, level, link,
@@ -2872,12 +2879,18 @@ module.exports = function parseLinkDestination(state, pos) {
 };
 
 },{"../common/utils":5,"./normalize_link":9}],12:[function(require,module,exports){
-// Parse link label
-//
-// this function assumes that first character ("[") already matches;
-// returns the end of the label
-//
 'use strict';
+
+/**
+ * Parse link labels
+ *
+ * This function assumes that first character (`[`) already matches;
+ * returns the end of the label.
+ *
+ * @param  {Object} state
+ * @param  {Number} start
+ * @api private
+ */
 
 module.exports = function parseLinkLabel(state, start) {
   var level, found, marker,
@@ -2927,16 +2940,21 @@ module.exports = function parseLinkLabel(state, start) {
 };
 
 },{}],13:[function(require,module,exports){
-// Parse link title
-//
-// on success it returns a string and updates state.pos;
-// on failure it returns null
-//
 'use strict';
 
 
 var unescapeMd = require('../common/utils').unescapeMd;
 
+/**
+ * Parse link title
+ *
+ *   - on success it returns a string and updates state.pos;
+ *   - on failure it returns null
+ *
+ * @param  {Object} state
+ * @param  {Number} pos
+ * @api private
+ */
 
 module.exports = function parseLinkTitle(state, pos) {
   var code,
@@ -2970,28 +2988,39 @@ module.exports = function parseLinkTitle(state, pos) {
 };
 
 },{"../common/utils":5}],14:[function(require,module,exports){
-// Main perser class
-
 'use strict';
 
+/**
+ * Local dependencies
+ */
 
 var assign       = require('./common/utils').assign;
-var isString     = require('./common/utils').isString;
 var Renderer     = require('./renderer');
 var ParserCore   = require('./parser_core');
 var ParserBlock  = require('./parser_block');
 var ParserInline = require('./parser_inline');
 var Ruler        = require('./ruler');
 
+/**
+ * Preset configs
+ */
+
 var config = {
-  'default': require('./configs/default'),
-  full: require('./configs/full'),
-  commonmark: require('./configs/commonmark')
+  'default':    require('./configs/default'),
+  'full':       require('./configs/full'),
+  'commonmark': require('./configs/commonmark')
 };
 
+/**
+ * The `StateCore` class manages state.
+ *
+ * @param {Object} `self` Remarkable instance
+ * @param {String} `str` Markdown string
+ * @param {Object} `env`
+ */
 
-function StateCore(self, src, env) {
-  this.src = src;
+function StateCore(self, str, env) {
+  this.src = str;
   this.env = env;
   this.options = self.options;
   this.tokens = [];
@@ -3003,14 +3032,18 @@ function StateCore(self, src, env) {
   this.typographer = self.typographer;
 }
 
-// Main class
-//
-function Remarkable(presetName, options) {
-  if (!options) {
-    if (!isString(presetName)) {
-      options = presetName || {};
-      presetName = 'default';
-    }
+/**
+ * The main `Remarkable` class. Create an instance of
+ * `Remarkable` with a `preset` and/or `options`.
+ *
+ * @param {String} `preset` If no preset is given, `default` is used.
+ * @param {Object} `options`
+ */
+
+function Remarkable(preset, options) {
+  if (typeof preset !== 'string') {
+    options = preset;
+    preset = 'default';
   }
 
   this.inline   = new ParserInline();
@@ -3020,28 +3053,36 @@ function Remarkable(presetName, options) {
   this.ruler    = new Ruler();
 
   this.options  = {};
-  this.configure(config[presetName]);
-
-  if (options) { this.set(options); }
+  this.configure(config[preset]);
+  this.set(options || {});
 }
 
+/**
+ * Set options as an alternative to passing them
+ * to the constructor.
+ *
+ * ```js
+ * md.set({typographer: true});
+ * ```
+ * @param {Object} `options`
+ * @api public
+ */
 
-// Set options, if you did not passed those to constructor
-//
 Remarkable.prototype.set = function (options) {
   assign(this.options, options);
 };
 
+/**
+ * Batch loader for components rules states, and options
+ *
+ * @param  {Object} `presets`
+ */
 
-// Batch loader for components rules states & options
-//
 Remarkable.prototype.configure = function (presets) {
   var self = this;
 
   if (!presets) { throw new Error('Wrong `remarkable` preset, check name/content'); }
-
   if (presets.options) { self.set(presets.options); }
-
   if (presets.components) {
     Object.keys(presets.components).forEach(function (name) {
       if (presets.components[name].rules) {
@@ -3051,76 +3092,111 @@ Remarkable.prototype.configure = function (presets) {
   }
 };
 
+/**
+ * Use a plugin.
+ *
+ * ```js
+ * var md = new Remarkable();
+ *
+ * md.use(plugin1)
+ *   .use(plugin2, opts)
+ *   .use(plugin3);
+ * ```
+ *
+ * @param  {Function} `plugin`
+ * @param  {Object} `options`
+ * @return {Object} `Remarkable` for chaining
+ */
 
-// Sugar for curried plugins init:
-//
-// var md = new Remarkable();
-//
-// md.use(plugin1)
-//   .use(plugin2, opts)
-//   .use(plugin3);
-//
-Remarkable.prototype.use = function (plugin, opts) {
-  plugin(this, opts);
+Remarkable.prototype.use = function (plugin, options) {
+  plugin(this, options);
   return this;
 };
 
 
-// Parse input string, returns tokens array. Modify `env` with
-// definitions data.
-//
-Remarkable.prototype.parse = function (src, env) {
-  var state = new StateCore(this, src, env);
+/**
+ * Parse the input `string` and return a tokens array.
+ * Modifies `env` with definitions data.
+ *
+ * @param  {String} `string`
+ * @param  {Object} `env`
+ * @return {Array} Array of tokens
+ */
 
+Remarkable.prototype.parse = function (str, env) {
+  var state = new StateCore(this, str, env);
   this.core.process(state);
-
   return state.tokens;
 };
 
-// Main method that does all magic :)
-//
-Remarkable.prototype.render = function (src, env) {
-  env = env || {};
+/**
+ * The main `.render()` method that does all the magic :)
+ *
+ * @param  {String} `string`
+ * @param  {Object} `env`
+ * @return {String} Rendered HTML.
+ */
 
-  return this.renderer.render(this.parse(src, env), this.options, env);
+Remarkable.prototype.render = function (str, env) {
+  env = env || {};
+  return this.renderer.render(this.parse(str, env), this.options, env);
 };
 
+/**
+ * Parse the given content `string` as a single string.
+ *
+ * @param  {String} `string`
+ * @param  {Object} `env`
+ * @return {Array} Array of tokens
+ */
 
-// Parse content as single string
-//
-Remarkable.prototype.parseInline = function (src, env) {
-  var state = new StateCore(this, src, env);
-
+Remarkable.prototype.parseInline = function (str, env) {
+  var state = new StateCore(this, str, env);
   state.inlineMode = true;
   this.core.process(state);
-
   return state.tokens;
 };
 
-// Render single string, without wrapping it to paragraphs
-//
-Remarkable.prototype.renderInline = function (src, env) {
-  env = env || {};
+/**
+ * Render a single content `string`, without wrapping it
+ * to paragraphs
+ *
+ * @param  {String} `str`
+ * @param  {Object} `env`
+ * @return {String}
+ */
 
-  return this.renderer.render(this.parseInline(src, env), this.options, env);
+Remarkable.prototype.renderInline = function (str, env) {
+  env = env || {};
+  return this.renderer.render(this.parseInline(str, env), this.options, env);
 };
 
+/**
+ * Expose `Remarkable`
+ */
 
 module.exports = Remarkable;
 
-// Expose helpers, useful for custom renderer functions
+/**
+ * Expose `utils`, Useful helper functions for custom
+ * rendering.
+ */
+
 module.exports.utils = require('./common/utils');
 
 },{"./common/utils":5,"./configs/commonmark":6,"./configs/default":7,"./configs/full":8,"./parser_block":15,"./parser_core":16,"./parser_inline":17,"./renderer":18,"./ruler":19}],15:[function(require,module,exports){
-// Block parser
-
-
 'use strict';
 
+/**
+ * Local dependencies
+ */
 
-var Ruler           = require('./ruler');
-var StateBlock      = require('./rules_block/state_block');
+var Ruler      = require('./ruler');
+var StateBlock = require('./rules_block/state_block');
 
+/**
+ * Parser rules
+ */
 
 var _rules = [
   [ 'code',       require('./rules_block/code') ],
@@ -3137,34 +3213,48 @@ var _rules = [
   [ 'paragraph',  require('./rules_block/paragraph') ]
 ];
 
+/**
+ * Block Parser class
+ *
+ * @api private
+ */
 
-// Block Parser class
-//
 function ParserBlock() {
   this.ruler = new Ruler();
-
   for (var i = 0; i < _rules.length; i++) {
-    this.ruler.push(_rules[i][0], _rules[i][1], { alt: (_rules[i][2] || []).slice() });
+    this.ruler.push(_rules[i][0], _rules[i][1], {
+      alt: (_rules[i][2] || []).slice()
+    });
   }
 }
 
+/**
+ * Generate tokens for the given input range.
+ *
+ * @param  {Object} `state` Has properties like `src`, `parser`, `options` etc
+ * @param  {Number} `startLine`
+ * @param  {Number} `endLine`
+ * @api private
+ */
 
-// Generate tokens for input range
-//
 ParserBlock.prototype.tokenize = function (state, startLine, endLine) {
-  var ok, i,
-      rules = this.ruler.getRules(''),
-      len = rules.length,
-      line = startLine,
-      hasEmptyLines = false;
+  var rules = this.ruler.getRules('');
+  var len = rules.length;
+  var line = startLine;
+  var hasEmptyLines = false;
+  var ok, i;
 
   while (line < endLine) {
     state.line = line = state.skipEmptyLines(line);
-    if (line >= endLine) { break; }
+    if (line >= endLine) {
+      break;
+    }
 
     // Termination condition for nested calls.
     // Nested calls currently used for blockquotes & lists
-    if (state.tShift[line] < state.blkIndent) { break; }
+    if (state.tShift[line] < state.blkIndent) {
+      break;
+    }
 
     // Try all possible rules.
     // On success, rule should:
@@ -3175,7 +3265,9 @@ ParserBlock.prototype.tokenize = function (state, startLine, endLine) {
 
     for (i = 0; i < len; i++) {
       ok = rules[i](state, line, endLine, false);
-      if (ok) { break; }
+      if (ok) {
+        break;
+      }
     }
 
     // set state.tight iff we had an empty line before current tag
@@ -3197,6 +3289,7 @@ ParserBlock.prototype.tokenize = function (state, startLine, endLine) {
       if (line < endLine && state.parentType === 'list' && state.isEmpty(line)) { break; }
       state.line = line;
     }
+    state.blkPos = state.bMarks[state.line];
   }
 };
 
@@ -3204,22 +3297,31 @@ var TABS_SCAN_RE = /[\n\t]/g;
 var NEWLINES_RE  = /\r[\n\u0085]|[\u2424\u2028\u0085]/g;
 var SPACES_RE    = /\u00a0/g;
 
-ParserBlock.prototype.parse = function (src, options, env, outTokens) {
-  var state, lineStart = 0, lastTabPos = 0;
+/**
+ * Tokenize the given `str`.
+ *
+ * @param  {String} `str` Source string
+ * @param  {Object} `options`
+ * @param  {Object} `env`
+ * @param  {Array} `outTokens`
+ * @api private
+ */
 
-  if (!src) { return []; }
+ParserBlock.prototype.parse = function (str, options, env, outTokens) {
+  var state, lineStart = 0, lastTabPos = 0;
+  if (!str) { return []; }
 
   // Normalize spaces
-  src = src.replace(SPACES_RE, ' ');
+  str = str.replace(SPACES_RE, ' ');
 
   // Normalize newlines
-  src = src.replace(NEWLINES_RE, '\n');
+  str = str.replace(NEWLINES_RE, '\n');
 
   // Replace tabs with proper number of spaces (1..4)
-  if (src.indexOf('\t') >= 0) {
-    src = src.replace(TABS_SCAN_RE, function (match, offset) {
+  if (!options.preserveTabs && str.indexOf('\t') >= 0) {
+    str = str.replace(TABS_SCAN_RE, function (match, offset) {
       var result;
-      if (src.charCodeAt(offset) === 0x0A) {
+      if (str.charCodeAt(offset) === 0x0A) {
         lineStart = offset + 1;
         lastTabPos = 0;
         return match;
@@ -3230,28 +3332,28 @@ ParserBlock.prototype.parse = function (src, options, env, outTokens) {
     });
   }
 
-  state = new StateBlock(
-    src,
-    this,
-    options,
-    env,
-    outTokens
-  );
-
+  state = new StateBlock(str, this, options, env, outTokens);
   this.tokenize(state, state.line, state.lineMax);
 };
 
+/**
+ * Expose `ParserBlock`
+ */
 
 module.exports = ParserBlock;
 
-},{"./ruler":19,"./rules_block/blockquote":20,"./rules_block/code":21,"./rules_block/deflist":22,"./rules_block/fences":23,"./rules_block/footnote":24,"./rules_block/heading":25,"./rules_block/hr":26,"./rules_block/htmlblock":27,"./rules_block/lheading":28,"./rules_block/list":29,"./rules_block/paragraph":30,"./rules_block/state_block":31,"./rules_block/table":32}],16:[function(require,module,exports){
-// Class of top level (`core`)  rules
-//
+},{"./ruler":19,"./rules_block/blockquote":21,"./rules_block/code":22,"./rules_block/deflist":23,"./rules_block/fences":24,"./rules_block/footnote":25,"./rules_block/heading":26,"./rules_block/hr":27,"./rules_block/htmlblock":28,"./rules_block/lheading":29,"./rules_block/list":30,"./rules_block/paragraph":31,"./rules_block/state_block":32,"./rules_block/table":33}],16:[function(require,module,exports){
 'use strict';
 
+/**
+ * Local dependencies
+ */
 
-var Ruler  = require('./ruler');
+var Ruler = require('./ruler');
 
+/**
+ * Core parser `rules`
+ */
 
 var _rules = [
   [ 'block',          require('./rules_core/block')          ],
@@ -3265,43 +3367,55 @@ var _rules = [
   [ 'linkify',        require('./rules_core/linkify')        ]
 ];
 
+/**
+ * Class for top level (`core`) parser rules
+ *
+ * @api private
+ */
 
 function Core() {
   this.options = {};
-
   this.ruler = new Ruler();
-
   for (var i = 0; i < _rules.length; i++) {
     this.ruler.push(_rules[i][0], _rules[i][1]);
   }
 }
 
+/**
+ * Process rules with the given `state`
+ *
+ * @param  {Object} `state`
+ * @api private
+ */
 
 Core.prototype.process = function (state) {
   var i, l, rules;
-
   rules = this.ruler.getRules('');
-
   for (i = 0, l = rules.length; i < l; i++) {
     rules[i](state);
   }
 };
 
+/**
+ * Expose `Core`
+ */
 
 module.exports = Core;
 
-},{"./ruler":19,"./rules_core/abbr":33,"./rules_core/abbr2":34,"./rules_core/block":35,"./rules_core/footnote_tail":36,"./rules_core/inline":37,"./rules_core/linkify":38,"./rules_core/references":39,"./rules_core/replacements":40,"./rules_core/smartquotes":41}],17:[function(require,module,exports){
-// Inline parser
-
+},{"./ruler":19,"./rules_core/abbr":34,"./rules_core/abbr2":35,"./rules_core/block":36,"./rules_core/footnote_tail":37,"./rules_core/inline":38,"./rules_core/linkify":39,"./rules_core/references":40,"./rules_core/replacements":41,"./rules_core/smartquotes":42}],17:[function(require,module,exports){
 'use strict';
 
+/**
+ * Local dependencies
+ */
 
-var Ruler           = require('./ruler');
-var StateInline     = require('./rules_inline/state_inline');
-var replaceEntities = require('./common/utils').replaceEntities;
+var Ruler       = require('./ruler');
+var StateInline = require('./rules_inline/state_inline');
+var utils       = require('./common/utils');
 
-////////////////////////////////////////////////////////////////////////////////
-// Parser rules
+/**
+ * Inline Parser `rules`
+ */
 
 var _rules = [
   [ 'text',            require('./rules_inline/text') ],
@@ -3322,43 +3436,37 @@ var _rules = [
   [ 'entity',          require('./rules_inline/entity') ]
 ];
 
+/**
+ * Inline Parser class. Note that link validation is stricter
+ * in Remarkable than what is specified by CommonMark. If you
+ * want to change this you can use a custom validator.
+ *
+ * @api private
+ */
 
-var BAD_PROTOCOLS = [ 'vbscript', 'javascript', 'file' ];
-
-function validateLink(url) {
-  var str = url.trim().toLowerCase();
-
-  // Care about digital entities "javascript&#x3A;alert(1)"
-  str = replaceEntities(str);
-
-  if (str.indexOf(':') >= 0 && BAD_PROTOCOLS.indexOf(str.split(':')[0]) >= 0) {
-    return false;
-  }
-  return true;
-}
-
-// Inline Parser class
-//
 function ParserInline() {
-  // By default CommonMark allows too much in links
-  // If you need to restrict it - override this with your validator.
-  this.validateLink = validateLink;
-
   this.ruler = new Ruler();
-
   for (var i = 0; i < _rules.length; i++) {
     this.ruler.push(_rules[i][0], _rules[i][1]);
   }
+
+  // Can be overridden with a custom validator
+  this.validateLink = validateLink;
 }
 
+/**
+ * Skip a single token by running all rules in validation mode.
+ * Returns `true` if any rule reports success.
+ *
+ * @param  {Object} `state`
+ * @api privage
+ */
 
-// Skip single token by running all rules in validation mode;
-// returns `true` if any rule reported success
-//
 ParserInline.prototype.skipToken = function (state) {
-  var i, cached_pos, pos = state.pos,
-      rules = this.ruler.getRules(''),
-      len = rules.length;
+  var rules = this.ruler.getRules('');
+  var len = rules.length;
+  var pos = state.pos;
+  var i, cached_pos;
 
   if ((cached_pos = state.cacheGet(pos)) > 0) {
     state.pos = cached_pos;
@@ -3376,27 +3484,33 @@ ParserInline.prototype.skipToken = function (state) {
   state.cacheSet(pos, state.pos);
 };
 
+/**
+ * Generate tokens for the given input range.
+ *
+ * @param  {Object} `state`
+ * @api private
+ */
 
-// Generate tokens for input range
-//
 ParserInline.prototype.tokenize = function (state) {
-  var ok, i,
-      rules = this.ruler.getRules(''),
-      len = rules.length,
-      end = state.posMax;
+  var rules = this.ruler.getRules('');
+  var len = rules.length;
+  var end = state.posMax;
+  var ok, i;
 
   while (state.pos < end) {
 
     // Try all possible rules.
-    // On success, rule should:
+    // On success, the rule should:
     //
     // - update `state.pos`
     // - update `state.tokens`
     // - return true
-
     for (i = 0; i < len; i++) {
       ok = rules[i](state, false);
-      if (ok) { break; }
+
+      if (ok) {
+        break;
+      }
     }
 
     if (ok) {
@@ -3412,76 +3526,441 @@ ParserInline.prototype.tokenize = function (state) {
   }
 };
 
+/**
+ * Parse the given input string.
+ *
+ * @param  {String} `str`
+ * @param  {Object} `options`
+ * @param  {Object} `env`
+ * @param  {Array} `outTokens`
+ * @api private
+ */
 
-// Parse input string.
-//
 ParserInline.prototype.parse = function (str, options, env, outTokens) {
   var state = new StateInline(str, this, options, env, outTokens);
-
   this.tokenize(state);
 };
 
+/**
+ * Validate the given `url` by checking for bad protocols.
+ *
+ * @param  {String} `url`
+ * @return {Boolean}
+ */
+
+function validateLink(url) {
+  var BAD_PROTOCOLS = [ 'vbscript', 'javascript', 'file' ];
+  var str = url.trim().toLowerCase();
+  // Care about digital entities "javascript&#x3A;alert(1)"
+  str = utils.replaceEntities(str);
+  if (str.indexOf(':') !== -1 && BAD_PROTOCOLS.indexOf(str.split(':')[0]) !== -1) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Expose `ParserInline`
+ */
 
 module.exports = ParserInline;
 
-},{"./common/utils":5,"./ruler":19,"./rules_inline/autolink":42,"./rules_inline/backticks":43,"./rules_inline/del":44,"./rules_inline/emphasis":45,"./rules_inline/entity":46,"./rules_inline/escape":47,"./rules_inline/footnote_inline":48,"./rules_inline/footnote_ref":49,"./rules_inline/htmltag":50,"./rules_inline/ins":51,"./rules_inline/links":52,"./rules_inline/mark":53,"./rules_inline/newline":54,"./rules_inline/state_inline":55,"./rules_inline/sub":56,"./rules_inline/sup":57,"./rules_inline/text":58}],18:[function(require,module,exports){
+},{"./common/utils":5,"./ruler":19,"./rules_inline/autolink":43,"./rules_inline/backticks":44,"./rules_inline/del":45,"./rules_inline/emphasis":46,"./rules_inline/entity":47,"./rules_inline/escape":48,"./rules_inline/footnote_inline":49,"./rules_inline/footnote_ref":50,"./rules_inline/htmltag":51,"./rules_inline/ins":52,"./rules_inline/links":53,"./rules_inline/mark":54,"./rules_inline/newline":55,"./rules_inline/state_inline":56,"./rules_inline/sub":57,"./rules_inline/sup":58,"./rules_inline/text":59}],18:[function(require,module,exports){
 'use strict';
 
+/**
+ * Local dependencies
+ */
 
-var assign          = require('./common/utils').assign;
+var utils = require('./common/utils');
+var rules = require('./rules');
+
+/**
+ * Expose `Renderer`
+ */
+
+module.exports = Renderer;
+
+/**
+ * Renderer class. Renders HTML and exposes `rules` to allow
+ * local modifications.
+ */
+
+function Renderer() {
+  this.rules = utils.assign({}, rules);
+
+  // exported helper, for custom rules only
+  this.getBreak = rules.getBreak;
+}
+
+/**
+ * Render a string of inline HTML with the given `tokens` and
+ * `options`.
+ *
+ * @param  {Array} `tokens`
+ * @param  {Object} `options`
+ * @param  {Object} `env`
+ * @return {String}
+ * @api public
+ */
+
+Renderer.prototype.renderInline = function (tokens, options, env) {
+  var _rules = this.rules;
+  var len = tokens.length, i = 0;
+  var result = '';
+
+  while (len--) {
+    result += _rules[tokens[i].type](tokens, i++, options, env, this);
+  }
+
+  return result;
+};
+
+/**
+ * Render a string of HTML with the given `tokens` and
+ * `options`.
+ *
+ * @param  {Array} `tokens`
+ * @param  {Object} `options`
+ * @param  {Object} `env`
+ * @return {String}
+ * @api public
+ */
+
+Renderer.prototype.render = function (tokens, options, env) {
+  var _rules = this.rules;
+  var len = tokens.length, i = -1;
+  var result = '';
+
+  while (++i < len) {
+    if (tokens[i].type === 'inline') {
+      result += this.renderInline(tokens[i].children, options, env);
+    } else {
+      result += _rules[tokens[i].type](tokens, i, options, env, this);
+    }
+  }
+  return result;
+};
+
+},{"./common/utils":5,"./rules":20}],19:[function(require,module,exports){
+'use strict';
+
+/**
+ * Ruler is a helper class for building responsibility chains from
+ * parse rules. It allows:
+ *
+ *   - easy stack rules chains
+ *   - getting main chain and named chains content (as arrays of functions)
+ *
+ * Helper methods, should not be used directly.
+ * @api private
+ */
+
+function Ruler() {
+  // List of added rules. Each element is:
+  //
+  // { name: XXX,
+  //   enabled: Boolean,
+  //   fn: Function(),
+  //   alt: [ name2, name3 ] }
+  //
+  this.__rules__ = [];
+
+  // Cached rule chains.
+  //
+  // First level - chain name, '' for default.
+  // Second level - digital anchor for fast filtering by charcodes.
+  //
+  this.__cache__ = null;
+}
+
+/**
+ * Find the index of a rule by `name`.
+ *
+ * @param  {String} `name`
+ * @return {Number} Index of the given `name`
+ * @api private
+ */
+
+Ruler.prototype.__find__ = function (name) {
+  var len = this.__rules__.length;
+  var i = -1;
+
+  while (len--) {
+    if (this.__rules__[++i].name === name) {
+      return i;
+    }
+  }
+  return -1;
+};
+
+/**
+ * Build the rules lookup cache
+ *
+ * @api private
+ */
+
+Ruler.prototype.__compile__ = function () {
+  var self = this;
+  var chains = [ '' ];
+
+  // collect unique names
+  self.__rules__.forEach(function (rule) {
+    if (!rule.enabled) {
+      return;
+    }
+
+    rule.alt.forEach(function (altName) {
+      if (chains.indexOf(altName) < 0) {
+        chains.push(altName);
+      }
+    });
+  });
+
+  self.__cache__ = {};
+
+  chains.forEach(function (chain) {
+    self.__cache__[chain] = [];
+    self.__rules__.forEach(function (rule) {
+      if (!rule.enabled) {
+        return;
+      }
+
+      if (chain && rule.alt.indexOf(chain) < 0) {
+        return;
+      }
+      self.__cache__[chain].push(rule.fn);
+    });
+  });
+};
+
+/**
+ * Ruler public methods
+ * ------------------------------------------------
+ */
+
+/**
+ * Replace rule function
+ *
+ * @param  {String} `name` Rule name
+ * @param  {Function `fn`
+ * @param  {Object} `options`
+ * @api private
+ */
+
+Ruler.prototype.at = function (name, fn, options) {
+  var idx = this.__find__(name);
+  var opt = options || {};
+
+  if (idx === -1) {
+    throw new Error('Parser rule not found: ' + name);
+  }
+
+  this.__rules__[idx].fn = fn;
+  this.__rules__[idx].alt = opt.alt || [];
+  this.__cache__ = null;
+};
+
+/**
+ * Add a rule to the chain before given the `ruleName`.
+ *
+ * @param  {String}   `beforeName`
+ * @param  {String}   `ruleName`
+ * @param  {Function} `fn`
+ * @param  {Object}   `options`
+ * @api private
+ */
+
+Ruler.prototype.before = function (beforeName, ruleName, fn, options) {
+  var idx = this.__find__(beforeName);
+  var opt = options || {};
+
+  if (idx === -1) {
+    throw new Error('Parser rule not found: ' + beforeName);
+  }
+
+  this.__rules__.splice(idx, 0, {
+    name: ruleName,
+    enabled: true,
+    fn: fn,
+    alt: opt.alt || []
+  });
+
+  this.__cache__ = null;
+};
+
+/**
+ * Add a rule to the chain after the given `ruleName`.
+ *
+ * @param  {String}   `afterName`
+ * @param  {String}   `ruleName`
+ * @param  {Function} `fn`
+ * @param  {Object}   `options`
+ * @api private
+ */
+
+Ruler.prototype.after = function (afterName, ruleName, fn, options) {
+  var idx = this.__find__(afterName);
+  var opt = options || {};
+
+  if (idx === -1) {
+    throw new Error('Parser rule not found: ' + afterName);
+  }
+
+  this.__rules__.splice(idx + 1, 0, {
+    name: ruleName,
+    enabled: true,
+    fn: fn,
+    alt: opt.alt || []
+  });
+
+  this.__cache__ = null;
+};
+
+/**
+ * Add a rule to the end of chain.
+ *
+ * @param  {String}   `ruleName`
+ * @param  {Function} `fn`
+ * @param  {Object}   `options`
+ * @return {String}
+ */
+
+Ruler.prototype.push = function (ruleName, fn, options) {
+  var opt = options || {};
+
+  this.__rules__.push({
+    name: ruleName,
+    enabled: true,
+    fn: fn,
+    alt: opt.alt || []
+  });
+
+  this.__cache__ = null;
+};
+
+/**
+ * Enable a rule or list of rules.
+ *
+ * @param  {String|Array} `list` Name or array of rule names to enable
+ * @param  {Boolean} `strict` If `true`, all non listed rules will be disabled.
+ * @api private
+ */
+
+Ruler.prototype.enable = function (list, strict) {
+  list = !Array.isArray(list)
+    ? [ list ]
+    : list;
+
+  // In strict mode disable all existing rules first
+  if (strict) {
+    this.__rules__.forEach(function (rule) {
+      rule.enabled = false;
+    });
+  }
+
+  // Search by name and enable
+  list.forEach(function (name) {
+    var idx = this.__find__(name);
+    if (idx < 0) {
+      throw new Error('Rules manager: invalid rule name ' + name);
+    }
+    this.__rules__[idx].enabled = true;
+  }, this);
+
+  this.__cache__ = null;
+};
+
+
+/**
+ * Disable a rule or list of rules.
+ *
+ * @param  {String|Array} `list` Name or array of rule names to disable
+ * @api private
+ */
+
+Ruler.prototype.disable = function (list) {
+  list = !Array.isArray(list)
+    ? [ list ]
+    : list;
+
+  // Search by name and disable
+  list.forEach(function (name) {
+    var idx = this.__find__(name);
+    if (idx < 0) {
+      throw new Error('Rules manager: invalid rule name ' + name);
+    }
+    this.__rules__[idx].enabled = false;
+  }, this);
+
+  this.__cache__ = null;
+};
+
+/**
+ * Get a rules list as an array of functions.
+ *
+ * @param  {String} `chainName`
+ * @return {Object}
+ * @api private
+ */
+
+Ruler.prototype.getRules = function (chainName) {
+  if (this.__cache__ === null) {
+    this.__compile__();
+  }
+  return this.__cache__[chainName];
+};
+
+/**
+ * Expose `Ruler`
+ */
+
+module.exports = Ruler;
+
+},{}],20:[function(require,module,exports){
+'use strict';
+
+/**
+ * Local dependencies
+ */
+
 var has             = require('./common/utils').has;
 var unescapeMd      = require('./common/utils').unescapeMd;
 var replaceEntities = require('./common/utils').replaceEntities;
 var escapeHtml      = require('./common/utils').escapeHtml;
 
-
-////////////////////////////////////////////////////////////////////////////////
-// Helpers
-
-function nextToken(tokens, idx) {
-  if (++idx >= tokens.length - 2) { return idx; }
-  if ((tokens[idx].type === 'paragraph_open' && tokens[idx].tight) &&
-      (tokens[idx + 1].type === 'inline' && tokens[idx + 1].content.length === 0) &&
-      (tokens[idx + 2].type === 'paragraph_close' && tokens[idx + 2].tight)) {
-    return nextToken(tokens, idx + 2);
-  }
-  return idx;
-}
-
-
-// check if we need to hide '\n' before next token
-function getBreak(tokens, idx) {
-  idx = nextToken(tokens, idx);
-  if (idx < tokens.length &&
-      tokens[idx].type === 'list_item_close') {
-    return '';
-  }
-
-  return '\n';
-}
-
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * Renderer rules cache
+ */
 
 var rules = {};
 
-
+/**
+ * Blockquotes
+ */
 
 rules.blockquote_open = function (/* tokens, idx, options, env */) {
   return '<blockquote>\n';
 };
+
 rules.blockquote_close = function (tokens, idx /*, options, env */) {
   return '</blockquote>' + getBreak(tokens, idx);
 };
 
+/**
+ * Code
+ */
 
 rules.code = function (tokens, idx /*, options, env */) {
   if (tokens[idx].block) {
     return '<pre><code>' + escapeHtml(tokens[idx].content) + '</code></pre>' + getBreak(tokens, idx);
   }
-
   return '<code>' + escapeHtml(tokens[idx].content) + '</code>';
 };
 
+/**
+ * Fenced code blocks
+ */
 
 rules.fence = function (tokens, idx, options, env, self) {
   var token = tokens[idx];
@@ -3515,13 +3994,17 @@ rules.fence = function (tokens, idx, options, env, self) {
     highlighted = escapeHtml(token.content);
   }
 
-
-  return  '<pre><code' + langClass + '>'
+  return '<pre><code' + langClass + '>'
         + highlighted
-        + '</code></pre>' + getBreak(tokens, idx);
+        + '</code></pre>'
+        + getBreak(tokens, idx);
 };
 
 rules.fence_custom = {};
+
+/**
+ * Headings
+ */
 
 rules.heading_open = function (tokens, idx /*, options, env */) {
   return '<h' + tokens[idx].hLevel + '>';
@@ -3530,11 +4013,17 @@ rules.heading_close = function (tokens, idx /*, options, env */) {
   return '</h' + tokens[idx].hLevel + '>\n';
 };
 
+/**
+ * Horizontal rules
+ */
 
 rules.hr = function (tokens, idx, options /*, env */) {
   return (options.xhtmlOut ? '<hr />' : '<hr>') + getBreak(tokens, idx);
 };
 
+/**
+ * Bullets
+ */
 
 rules.bullet_list_open = function (/* tokens, idx, options, env */) {
   return '<ul>\n';
@@ -3542,22 +4031,34 @@ rules.bullet_list_open = function (/* tokens, idx, options, env */) {
 rules.bullet_list_close = function (tokens, idx /*, options, env */) {
   return '</ul>' + getBreak(tokens, idx);
 };
+
+/**
+ * List items
+ */
+
 rules.list_item_open = function (/* tokens, idx, options, env */) {
   return '<li>';
 };
 rules.list_item_close = function (/* tokens, idx, options, env */) {
   return '</li>\n';
 };
+
+/**
+ * Ordered list items
+ */
+
 rules.ordered_list_open = function (tokens, idx /*, options, env */) {
   var token = tokens[idx];
-  return '<ol'
-    + (token.order > 1 ? ' start="' + token.order + '"' : '')
-    + '>\n';
+  var order = token.order > 1 ? ' start="' + token.order + '"' : '';
+  return '<ol' + order + '>\n';
 };
 rules.ordered_list_close = function (tokens, idx /*, options, env */) {
   return '</ol>' + getBreak(tokens, idx);
 };
 
+/**
+ * Paragraphs
+ */
 
 rules.paragraph_open = function (tokens, idx /*, options, env */) {
   return tokens[idx].tight ? '' : '<p>';
@@ -3567,6 +4068,9 @@ rules.paragraph_close = function (tokens, idx /*, options, env */) {
   return (tokens[idx].tight ? '' : '</p>') + (addBreak ? getBreak(tokens, idx) : '');
 };
 
+/**
+ * Links
+ */
 
 rules.link_open = function (tokens, idx /*, options, env */) {
   var title = tokens[idx].title ? (' title="' + escapeHtml(replaceEntities(tokens[idx].title)) + '"') : '';
@@ -3576,6 +4080,9 @@ rules.link_close = function (/* tokens, idx, options, env */) {
   return '</a>';
 };
 
+/**
+ * Images
+ */
 
 rules.image = function (tokens, idx, options /*, env */) {
   var src = ' src="' + escapeHtml(tokens[idx].src) + '"';
@@ -3585,6 +4092,9 @@ rules.image = function (tokens, idx, options /*, env */) {
   return '<img' + src + alt + title + suffix + '>';
 };
 
+/**
+ * Tables
+ */
 
 rules.table_open = function (/* tokens, idx, options, env */) {
   return '<table>\n';
@@ -3629,6 +4139,9 @@ rules.td_close = function (/* tokens, idx, options, env */) {
   return '</td>';
 };
 
+/**
+ * Bold
+ */
 
 rules.strong_open = function (/* tokens, idx, options, env */) {
   return '<strong>';
@@ -3636,6 +4149,11 @@ rules.strong_open = function (/* tokens, idx, options, env */) {
 rules.strong_close = function (/* tokens, idx, options, env */) {
   return '</strong>';
 };
+
+/**
+ * Italicize
+ */
+
 rules.em_open = function (/* tokens, idx, options, env */) {
   return '<em>';
 };
@@ -3643,6 +4161,9 @@ rules.em_close = function (/* tokens, idx, options, env */) {
   return '</em>';
 };
 
+/**
+ * Strikethrough
+ */
 
 rules.del_open = function (/* tokens, idx, options, env */) {
   return '<del>';
@@ -3651,6 +4172,9 @@ rules.del_close = function (/* tokens, idx, options, env */) {
   return '</del>';
 };
 
+/**
+ * Insert
+ */
 
 rules.ins_open = function (/* tokens, idx, options, env */) {
   return '<ins>';
@@ -3659,6 +4183,9 @@ rules.ins_close = function (/* tokens, idx, options, env */) {
   return '</ins>';
 };
 
+/**
+ * Highlight
+ */
 
 rules.mark_open = function (/* tokens, idx, options, env */) {
   return '<mark>';
@@ -3667,6 +4194,9 @@ rules.mark_close = function (/* tokens, idx, options, env */) {
   return '</mark>';
 };
 
+/**
+ * Super- and sub-script
+ */
 
 rules.sub = function (tokens, idx /*, options, env */) {
   return '<sub>' + escapeHtml(tokens[idx].content) + '</sub>';
@@ -3675,6 +4205,9 @@ rules.sup = function (tokens, idx /*, options, env */) {
   return '<sup>' + escapeHtml(tokens[idx].content) + '</sup>';
 };
 
+/**
+ * Breaks
+ */
 
 rules.hardbreak = function (tokens, idx, options /*, env */) {
   return options.xhtmlOut ? '<br />\n' : '<br>\n';
@@ -3683,11 +4216,17 @@ rules.softbreak = function (tokens, idx, options /*, env */) {
   return options.breaks ? (options.xhtmlOut ? '<br />\n' : '<br>\n') : '\n';
 };
 
+/**
+ * Text
+ */
 
 rules.text = function (tokens, idx /*, options, env */) {
   return escapeHtml(tokens[idx].content);
 };
 
+/**
+ * Content
+ */
 
 rules.htmlblock = function (tokens, idx /*, options, env */) {
   return tokens[idx].content;
@@ -3696,6 +4235,9 @@ rules.htmltag = function (tokens, idx /*, options, env */) {
   return tokens[idx].content;
 };
 
+/**
+ * Abbreviations, initialism
+ */
 
 rules.abbr_open = function (tokens, idx /*, options, env */) {
   return '<abbr title="' + escapeHtml(replaceEntities(tokens[idx].title)) + '">';
@@ -3704,6 +4246,9 @@ rules.abbr_close = function (/* tokens, idx, options, env */) {
   return '</abbr>';
 };
 
+/**
+ * Footnotes
+ */
 
 rules.footnote_ref = function (tokens, idx) {
   var n = Number(tokens[idx].id + 1).toString();
@@ -3714,9 +4259,10 @@ rules.footnote_ref = function (tokens, idx) {
   return '<sup class="footnote-ref"><a href="#fn' + n + '" id="' + id + '">[' + n + ']</a></sup>';
 };
 rules.footnote_block_open = function (tokens, idx, options) {
-  return (options.xhtmlOut ? '<hr class="footnotes-sep" />\n' : '<hr class="footnotes-sep">\n') +
-         '<section class="footnotes">\n' +
-         '<ol class="footnotes-list">\n';
+  var hr = options.xhtmlOut
+    ? '<hr class="footnotes-sep" />\n'
+    : '<hr class="footnotes-sep">\n';
+  return  hr + '<section class="footnotes">\n<ol class="footnotes-list">\n';
 };
 rules.footnote_block_close = function () {
   return '</ol>\n</section>\n';
@@ -3737,6 +4283,9 @@ rules.footnote_anchor = function (tokens, idx) {
   return ' <a href="#' + id + '" class="footnote-backref">↩</a>';
 };
 
+/**
+ * Definition lists
+ */
 
 rules.dl_open = function() {
   return '<dl>\n';
@@ -3757,258 +4306,46 @@ rules.dd_close = function() {
   return '</dd>\n';
 };
 
+/**
+ * Helper functions
+ */
 
-// Renderer class
-function Renderer() {
-  // Clone rules object to allow local modifications
-  this.rules = assign({}, rules);
-  // exported helper, for custom rules only
-  this.getBreak = getBreak;
+function nextToken(tokens, idx) {
+  if (++idx >= tokens.length - 2) {
+    return idx;
+  }
+  if ((tokens[idx].type === 'paragraph_open' && tokens[idx].tight) &&
+      (tokens[idx + 1].type === 'inline' && tokens[idx + 1].content.length === 0) &&
+      (tokens[idx + 2].type === 'paragraph_close' && tokens[idx + 2].tight)) {
+    return nextToken(tokens, idx + 2);
+  }
+  return idx;
 }
 
+/**
+ * Check to see if `\n` is needed before the next token.
+ *
+ * @param  {Array} `tokens`
+ * @param  {Number} `idx`
+ * @return {String} Empty string or newline
+ * @api private
+ */
 
-Renderer.prototype.renderInline = function (tokens, options, env) {
-  var result = '',
-      _rules = this.rules;
-
-  for (var i = 0, len = tokens.length; i < len; i++) {
-    result += _rules[tokens[i].type](tokens, i, options, env, this);
+var getBreak = rules.getBreak = function getBreak(tokens, idx) {
+  idx = nextToken(tokens, idx);
+  if (idx < tokens.length && tokens[idx].type === 'list_item_close') {
+    return '';
   }
-
-  return result;
+  return '\n';
 };
 
+/**
+ * Expose `rules`
+ */
 
-Renderer.prototype.render = function (tokens, options, env) {
-  var i, len,
-      result = '',
-      _rules = this.rules;
+module.exports = rules;
 
-  for (i = 0, len = tokens.length; i < len; i++) {
-    if (tokens[i].type === 'inline') {
-      result += this.renderInline(tokens[i].children, options, env);
-    } else {
-      result += _rules[tokens[i].type](tokens, i, options, env, this);
-    }
-  }
-
-  return result;
-};
-
-module.exports = Renderer;
-
-},{"./common/utils":5}],19:[function(require,module,exports){
-// Ruler is helper class to build responsibility chains from parse rules.
-// It allows:
-//
-// - easy stack rules chains
-// - getting main chain and named chains content (as arrays of functions)
-//
-'use strict';
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-function Ruler() {
-  // List of added rules. Each element is:
-  //
-  // {
-  //   name: XXX,
-  //   enabled: Boolean,
-  //   fn: Function(),
-  //   alt: [ name2, name3 ]
-  // }
-  //
-  this.__rules__ = [];
-
-  // Cached rule chains.
-  //
-  // First level - chain name, '' for default.
-  // Second level - diginal anchor for fast filtering by charcodes.
-  //
-  this.__cache__ = null;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Helper methods, should not be used directly
-
-
-// Find rule index by name
-//
-Ruler.prototype.__find__ = function (name) {
-  for (var i = 0; i < this.__rules__.length; i++) {
-    if (this.__rules__[i].name === name) {
-      return i;
-    }
-  }
-  return -1;
-};
-
-
-// Build rules lookup cache
-//
-Ruler.prototype.__compile__ = function () {
-  var self = this;
-  var chains = [ '' ];
-
-  // collect unique names
-  self.__rules__.forEach(function (rule) {
-    if (!rule.enabled) { return; }
-
-    rule.alt.forEach(function (altName) {
-      if (chains.indexOf(altName) < 0) {
-        chains.push(altName);
-      }
-    });
-  });
-
-  self.__cache__ = {};
-
-  chains.forEach(function (chain) {
-    self.__cache__[chain] = [];
-    self.__rules__.forEach(function (rule) {
-      if (!rule.enabled) { return; }
-
-      if (chain && rule.alt.indexOf(chain) < 0) { return; }
-
-      self.__cache__[chain].push(rule.fn);
-    });
-  });
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Public methods
-
-
-// Replace rule function
-//
-Ruler.prototype.at = function (name, fn, options) {
-  var index = this.__find__(name);
-  var opt = options || {};
-
-  if (index === -1) { throw new Error('Parser rule not found: ' + name); }
-
-  this.__rules__[index].fn = fn;
-  this.__rules__[index].alt = opt.alt || [];
-  this.__cache__ = null;
-};
-
-
-// Add rule to chain before one with given name.
-//
-Ruler.prototype.before = function (beforeName, ruleName, fn, options) {
-  var index = this.__find__(beforeName);
-  var opt = options || {};
-
-  if (index === -1) { throw new Error('Parser rule not found: ' + beforeName); }
-
-  this.__rules__.splice(index, 0, {
-    name: ruleName,
-    enabled: true,
-    fn: fn,
-    alt: opt.alt || []
-  });
-
-  this.__cache__ = null;
-};
-
-
-// Add rule to chain after one with given name.
-//
-Ruler.prototype.after = function (afterName, ruleName, fn, options) {
-  var index = this.__find__(afterName);
-  var opt = options || {};
-
-  if (index === -1) { throw new Error('Parser rule not found: ' + afterName); }
-
-  this.__rules__.splice(index + 1, 0, {
-    name: ruleName,
-    enabled: true,
-    fn: fn,
-    alt: opt.alt || []
-  });
-
-  this.__cache__ = null;
-};
-
-// Add rule to the end of chain.
-//
-Ruler.prototype.push = function (ruleName, fn, options) {
-  var opt = options || {};
-
-  this.__rules__.push({
-    name: ruleName,
-    enabled: true,
-    fn: fn,
-    alt: opt.alt || []
-  });
-
-  this.__cache__ = null;
-};
-
-
-// Enable list of rules by names. If `strict` is true, then all non listed
-// rules will be disabled.
-//
-Ruler.prototype.enable = function (list, strict) {
-  if (!Array.isArray(list)) {
-    list = [ list ];
-  }
-
-  // In strict mode disable all existing rules first
-  if (strict) {
-    this.__rules__.forEach(function (rule) {
-      rule.enabled = false;
-    });
-  }
-
-  // Search by name and enable
-  list.forEach(function (name) {
-    var idx = this.__find__(name);
-
-    if (idx < 0) { throw new Error('Rules manager: invalid rule name ' + name); }
-    this.__rules__[idx].enabled = true;
-
-  }, this);
-
-  this.__cache__ = null;
-};
-
-
-// Disable list of rules by names.
-//
-Ruler.prototype.disable = function (list) {
-  if (!Array.isArray(list)) {
-    list = [ list ];
-  }
-
-  // Search by name and disable
-  list.forEach(function (name) {
-    var idx = this.__find__(name);
-
-    if (idx < 0) { throw new Error('Rules manager: invalid rule name ' + name); }
-    this.__rules__[idx].enabled = false;
-
-  }, this);
-
-  this.__cache__ = null;
-};
-
-
-// Get rules list as array of functions.
-//
-Ruler.prototype.getRules = function (chainName) {
-  if (this.__cache__ === null) {
-    this.__compile__();
-  }
-
-  return this.__cache__[chainName];
-};
-
-module.exports = Ruler;
-
-},{}],20:[function(require,module,exports){
+},{"./common/utils":5}],21:[function(require,module,exports){
 // Block quotes
 
 'use strict';
@@ -4122,12 +4459,14 @@ module.exports = function blockquote(state, startLine, endLine, silent) {
   state.tokens.push({
     type: 'blockquote_open',
     lines: lines = [ startLine, 0 ],
-    level: state.level++
+    level: state.level++,
+    pos: state.blkPos
   });
   state.parser.tokenize(state, startLine, nextLine);
   state.tokens.push({
     type: 'blockquote_close',
-    level: --state.level
+    level: --state.level,
+    pos: state.bMarks[nextLine]
   });
   state.parentType = oldParentType;
   lines[1] = state.line;
@@ -4143,7 +4482,7 @@ module.exports = function blockquote(state, startLine, endLine, silent) {
   return true;
 };
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 // Code block (4 spaces padded)
 
 'use strict';
@@ -4175,13 +4514,14 @@ module.exports = function code(state, startLine, endLine/*, silent*/) {
     content: state.getLines(startLine, last, 4 + state.blkIndent, true),
     block: true,
     lines: [ startLine, state.line ],
-    level: state.level
+    level: state.level,
+    pos: state.bMarks[startLine]
   });
 
   return true;
 };
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 // Definition lists
 
 'use strict';
@@ -4390,7 +4730,7 @@ module.exports = function deflist(state, startLine, endLine, silent) {
   return true;
 };
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 // fences (``` lang, ~~~ lang)
 
 'use strict';
@@ -4477,13 +4817,14 @@ module.exports = function fences(state, startLine, endLine, silent) {
     params: params,
     content: state.getLines(startLine + 1, nextLine, len, true),
     lines: [ startLine, state.line ],
-    level: state.level
+    level: state.level,
+    pos: state.bMarks[startLine]
   });
 
   return true;
 };
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 // Process footnote reference list
 
 'use strict';
@@ -4552,7 +4893,7 @@ module.exports = function footnote(state, startLine, endLine, silent) {
   return true;
 };
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 // heading (#, ##, ...)
 
 'use strict';
@@ -4590,29 +4931,41 @@ module.exports = function heading(state, startLine, endLine, silent) {
   }
 
   state.line = startLine + 1;
-
+  
   state.tokens.push({ type: 'heading_open',
     hLevel: level,
     lines: [ startLine, state.line ],
-    level: state.level
+    level: state.level,
+    pos: state.bMarks[startLine]
+  });
+
+  state.tokens.push({ type: 'heading_marker', 
+    pos: state.bMarks[startLine],
+    content: state.src.slice(state.bMarks[startLine], pos)
   });
 
   // only if header is not empty
   if (pos < max) {
     state.tokens.push({
       type: 'inline',
-      content: state.src.slice(pos, max).trim(),
+      content: state.src.slice(pos, max),
       level: state.level + 1,
       lines: [ startLine, state.line ],
-      children: []
+      children: [],
+      pos: pos
     });
   }
-  state.tokens.push({ type: 'heading_close', hLevel: level, level: state.level });
+  state.tokens.push({
+    type: 'heading_close',
+    hLevel: level,
+    level: state.level,
+    pos: state.eMarks[startLine]
+  });
 
   return true;
 };
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 // Horizontal rule
 
 'use strict';
@@ -4653,13 +5006,14 @@ module.exports = function hr(state, startLine, endLine, silent) {
   state.tokens.push({
     type: 'hr',
     lines: [ startLine, state.line ],
-    level: state.level
+    level: state.level,
+    pos: state.bMarks[startLine]
   });
 
   return true;
 };
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 // HTML block
 
 'use strict';
@@ -4735,7 +5089,7 @@ module.exports = function htmlblock(state, startLine, endLine, silent) {
   return true;
 };
 
-},{"../common/html_blocks":2}],28:[function(require,module,exports){
+},{"../common/html_blocks":2}],29:[function(require,module,exports){
 // lheading (---, ===)
 
 'use strict';
@@ -4774,25 +5128,28 @@ module.exports = function lheading(state, startLine, endLine/*, silent*/) {
     type: 'heading_open',
     hLevel: marker === 0x3D/* = */ ? 1 : 2,
     lines: [ startLine, state.line ],
-    level: state.level
+    level: state.level,
+    pos: state.bMarks[startLine]
   });
   state.tokens.push({
     type: 'inline',
     content: state.src.slice(pos, state.eMarks[startLine]).trim(),
     level: state.level + 1,
     lines: [ startLine, state.line - 1 ],
-    children: []
+    children: [],
+    pos: pos
   });
   state.tokens.push({
     type: 'heading_close',
     hLevel: marker === 0x3D/* = */ ? 1 : 2,
-    level: state.level
+    level: state.level,
+    pos: state.eMarks[state.line - 1]
   });
 
   return true;
 };
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 // Lists
 
 'use strict';
@@ -4928,14 +5285,16 @@ module.exports = function list(state, startLine, endLine, silent) {
       type: 'ordered_list_open',
       order: markerValue,
       lines: listLines = [ startLine, 0 ],
-      level: state.level++
+      level: state.level++,
+      pos: state.bMarks[startLine]
     });
 
   } else {
     state.tokens.push({
       type: 'bullet_list_open',
       lines: listLines = [ startLine, 0 ],
-      level: state.level++
+      level: state.level++,
+      pos: state.bMarks[startLine]
     });
   }
 
@@ -4970,12 +5329,20 @@ module.exports = function list(state, startLine, endLine, silent) {
     //  ^^^^^ - calculating total length of this thing
     indent = (posAfterMarker - state.bMarks[nextLine]) + indentAfterMarker;
 
+    state.tokens.push({ type: 'list_item_marker',
+      pos: state.bMarks[startLine],
+      content: state.src.slice(state.bMarks[startLine], posAfterMarker)
+    });
+
     // Run subparser & write tokens
     state.tokens.push({
       type: 'list_item_open',
       lines: itemLines = [ startLine, 0 ],
-      level: state.level++
+      level: state.level++,
+      pos: state.bMarks[startLine]
     });
+
+    var preLength = state.tokens.length
 
     oldIndent = state.blkIndent;
     oldTight = state.tight;
@@ -4985,8 +5352,11 @@ module.exports = function list(state, startLine, endLine, silent) {
     state.blkIndent = indent;
     state.tight = true;
     state.parentType = 'list';
+    state.blkPos = state.bMarks[startLine]
 
     state.parser.tokenize(state, startLine, endLine, true);
+
+    var postLength = state.tokens.length
 
     // If any of list item is tight, mark list as tight
     if (!state.tight || prevEmptyEnd) {
@@ -5003,7 +5373,8 @@ module.exports = function list(state, startLine, endLine, silent) {
 
     state.tokens.push({
       type: 'list_item_close',
-      level: --state.level
+      level: --state.level,
+      pos: state.eMarks[nextLine]
     });
 
     nextLine = startLine = state.line;
@@ -5060,7 +5431,7 @@ module.exports = function list(state, startLine, endLine, silent) {
   return true;
 };
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 // Paragraph
 
 'use strict';
@@ -5094,7 +5465,7 @@ module.exports = function paragraph(state, startLine/*, endLine*/) {
     }
   }
 
-  content = state.getLines(startLine, nextLine, state.blkIndent, false).trim();
+  content = state.getLines(startLine, nextLine, state.blkIndent, false);
 
   state.line = nextLine;
   if (content.length) {
@@ -5102,26 +5473,29 @@ module.exports = function paragraph(state, startLine/*, endLine*/) {
       type: 'paragraph_open',
       tight: false,
       lines: [ startLine, state.line ],
-      level: state.level
+      level: state.level,
+      pos: state.blkPos + state.blkIndent
     });
     state.tokens.push({
       type: 'inline',
       content: content,
       level: state.level + 1,
       lines: [ startLine, state.line ],
-      children: []
+      children: [],
+      pos: (state.blkPos || 0) + (state.blkIndent || 0)
     });
     state.tokens.push({
       type: 'paragraph_close',
       tight: false,
-      level: state.level
+      level: state.level,
+      pos: state.blkPos + state.blkIndent + content.length
     });
   }
 
   return true;
 };
 
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 // Parser state class
 
 'use strict';
@@ -5281,7 +5655,7 @@ StateBlock.prototype.getLines = function getLines(begin, end, indent, keepLastLF
 
 module.exports = StateBlock;
 
-},{}],32:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 // GFM table, non-standard
 
 'use strict';
@@ -5417,7 +5791,7 @@ module.exports = function table(state, startLine, endLine, silent) {
   return true;
 };
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 // Parse abbreviation definitions, i.e. `*[abbr]: description`
 //
 
@@ -5489,7 +5863,7 @@ module.exports = function abbr(state) {
   }
 };
 
-},{"../helpers/parse_link_label":12,"../rules_inline/state_inline":55}],34:[function(require,module,exports){
+},{"../helpers/parse_link_label":12,"../rules_inline/state_inline":56}],35:[function(require,module,exports){
 // Enclose abbreviations in <abbr> tags
 //
 'use strict';
@@ -5579,7 +5953,7 @@ module.exports = function abbr2(state) {
   }
 };
 
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 'use strict';
 
 module.exports = function block(state) {
@@ -5598,7 +5972,7 @@ module.exports = function block(state) {
   }
 };
 
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 'use strict';
 
 
@@ -5695,7 +6069,7 @@ module.exports = function footnote_block(state) {
   });
 };
 
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 'use strict';
 
 module.exports = function inline(state) {
@@ -5706,11 +6080,15 @@ module.exports = function inline(state) {
     tok = tokens[i];
     if (tok.type === 'inline') {
       state.inline.parse(tok.content, state.options, state.env, tok.children);
+      var j, cl;
+      for (j = 0, cl = tok.children.length; j < cl; j++) {
+        tok.children[j].pos += tok.pos
+      }
     }
   }
 };
 
-},{}],38:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 // Replace link-like texts with link nodes.
 //
 // Currently restricted by `inline.validateLink()` to http/https/ftp
@@ -5873,7 +6251,7 @@ module.exports = function linkify(state) {
   }
 };
 
-},{"autolinker":59}],39:[function(require,module,exports){
+},{"autolinker":60}],40:[function(require,module,exports){
 'use strict';
 
 
@@ -5973,8 +6351,8 @@ module.exports = function references(state) {
   }
 };
 
-},{"../helpers/normalize_reference":10,"../helpers/parse_link_destination":11,"../helpers/parse_link_label":12,"../helpers/parse_link_title":13,"../rules_inline/state_inline":55}],40:[function(require,module,exports){
-// Simple typographyc replacements
+},{"../helpers/normalize_reference":10,"../helpers/parse_link_destination":11,"../helpers/parse_link_label":12,"../helpers/parse_link_title":13,"../rules_inline/state_inline":56}],41:[function(require,module,exports){
+// Simple typographical replacements
 //
 'use strict';
 
@@ -6020,16 +6398,17 @@ module.exports = function replace(state) {
         text = replaceScopedAbbr(text);
 
         if (RARE_RE.test(text)) {
-          text = text.replace(/\+-/g, '±')
-                      // .., ..., ....... -> …
-                      // but ?..... & !..... -> ?.. & !..
-                      .replace(/\.{2,}/g, '…').replace(/([?!])…/g, '$1..')
-                      .replace(/([?!]){4,}/g, '$1$1$1').replace(/,{2,}/g, ',')
-                      // em-dash
-                      .replace(/(^|[^-])---([^-]|$)/mg, '$1\u2014$2')
-                      // en-dash
-                      .replace(/(^|\s)--(\s|$)/mg, '$1\u2013$2')
-                      .replace(/(^|[^-\s])--([^-\s]|$)/mg, '$1\u2013$2');
+          text = text
+            .replace(/\+-/g, '±')
+            // .., ..., ....... -> …
+            // but ?..... & !..... -> ?.. & !..
+            .replace(/\.{2,}/g, '…').replace(/([?!])…/g, '$1..')
+            .replace(/([?!]){4,}/g, '$1$1$1').replace(/,{2,}/g, ',')
+            // em-dash
+            .replace(/(^|[^-])---([^-]|$)/mg, '$1\u2014$2')
+            // en-dash
+            .replace(/(^|\s)--(\s|$)/mg, '$1\u2013$2')
+            .replace(/(^|[^-\s])--([^-\s]|$)/mg, '$1\u2013$2');
         }
 
         token.content = text;
@@ -6038,7 +6417,7 @@ module.exports = function replace(state) {
   }
 };
 
-},{}],41:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 // Convert straight quotation marks to typographic ones
 //
 'use strict';
@@ -6153,7 +6532,7 @@ module.exports = function smartquotes(state) {
   }
 };
 
-},{}],42:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 // Process autolinks '<protocol:...>'
 
 'use strict';
@@ -6189,14 +6568,19 @@ module.exports = function autolink(state, silent) {
       state.push({
         type: 'link_open',
         href: fullUrl,
-        level: state.level
+        level: state.level,
+        pos: state.pos
       });
       state.push({
         type: 'text',
         content: url,
         level: state.level + 1
       });
-      state.push({ type: 'link_close', level: state.level });
+      state.push({
+        type: 'link_close',
+        level: state.level,
+        pos: state.pos + linkMatch[0].length
+      });
     }
 
     state.pos += linkMatch[0].length;
@@ -6216,14 +6600,19 @@ module.exports = function autolink(state, silent) {
       state.push({
         type: 'link_open',
         href: fullUrl,
-        level: state.level
+        level: state.level,
+        pos: state.pos
       });
       state.push({
         type: 'text',
         content: url,
         level: state.level + 1
       });
-      state.push({ type: 'link_close', level: state.level });
+      state.push({
+        type: 'link_close',
+        level: state.level,
+        pos: state.pos += emailMatch[0].length
+      });
     }
 
     state.pos += emailMatch[0].length;
@@ -6233,7 +6622,7 @@ module.exports = function autolink(state, silent) {
   return false;
 };
 
-},{"../common/url_schemas":4,"../helpers/normalize_link":9}],43:[function(require,module,exports){
+},{"../common/url_schemas":4,"../helpers/normalize_link":9}],44:[function(require,module,exports){
 // Parse backticks
 
 'use strict';
@@ -6281,7 +6670,7 @@ module.exports = function backticks(state, silent) {
   return true;
 };
 
-},{}],44:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 // Process ~~deleted text~~
 
 'use strict';
@@ -6313,7 +6702,10 @@ module.exports = function del(state, silent) {
   if (pos > start + 3) {
     // sequence of 4+ markers taking as literal, same as in a emphasis
     state.pos += pos - start;
-    if (!silent) { state.pending += state.src.slice(start, pos); }
+    if (!silent) {
+      state.pending += state.src.slice(start, pos);
+      state.pendingPos = start
+    }
     return true;
   }
 
@@ -6367,7 +6759,7 @@ module.exports = function del(state, silent) {
   return true;
 };
 
-},{}],45:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 // Process *this* and _that_
 
 'use strict';
@@ -6437,7 +6829,10 @@ module.exports = function emphasis(state, silent) {
   startCount = res.delims;
   if (!res.can_open) {
     state.pos += startCount;
-    if (!silent) { state.pending += state.src.slice(start, state.pos); }
+    if (!silent) {
+      state.pending += state.src.slice(start, state.pos);
+      state.pendingPos += start
+    }
     return true;
   }
 
@@ -6497,19 +6892,31 @@ module.exports = function emphasis(state, silent) {
 
   if (!silent) {
     if (startCount === 2 || startCount === 3) {
-      state.push({ type: 'strong_open', level: state.level++ });
+      state.push({ type: 'strong_open',
+                   level: state.level++,
+                   pos: start,
+                   content: state.src.substr(start, startCount) });
     }
     if (startCount === 1 || startCount === 3) {
-      state.push({ type: 'em_open', level: state.level++ });
+      state.push({ type: 'em_open',
+                   level: state.level++,
+                   pos: start,
+                   content: state.src.substr(start, startCount) });
     }
 
     state.parser.tokenize(state);
 
     if (startCount === 1 || startCount === 3) {
-      state.push({ type: 'em_close', level: --state.level });
+      state.push({ type: 'em_close',
+                   level: --state.level,
+                   pos: state.pos,
+                   content: state.src.substr(state.pos, startCount) });
     }
     if (startCount === 2 || startCount === 3) {
-      state.push({ type: 'strong_close', level: --state.level });
+      state.push({ type: 'strong_close',
+                   level: --state.level,
+                   pos: state.pos,
+                   content: state.src.substr(state.pos, startCount) });
     }
   }
 
@@ -6518,7 +6925,7 @@ module.exports = function emphasis(state, silent) {
   return true;
 };
 
-},{}],46:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 // Process html entity - &#123;, &#xAF;, &quot;, ...
 
 'use strict';
@@ -6568,7 +6975,7 @@ module.exports = function entity(state, silent) {
   return true;
 };
 
-},{"../common/entities":1,"../common/utils":5}],47:[function(require,module,exports){
+},{"../common/entities":1,"../common/utils":5}],48:[function(require,module,exports){
 // Proceess escaped chars and hardbreaks
 
 'use strict';
@@ -6592,7 +6999,10 @@ module.exports = function escape(state, silent) {
     ch = state.src.charCodeAt(pos);
 
     if (ch < 256 && ESCAPED[ch] !== 0) {
-      if (!silent) { state.pending += state.src[pos]; }
+      if (!silent) {
+        state.pending += state.src[pos];
+        state.pendingPos = pos
+      }
       state.pos += 2;
       return true;
     }
@@ -6619,7 +7029,7 @@ module.exports = function escape(state, silent) {
   return true;
 };
 
-},{}],48:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 // Process inline footnotes (^[...])
 
 'use strict';
@@ -6674,7 +7084,7 @@ module.exports = function footnote_inline(state, silent) {
   return true;
 };
 
-},{"../helpers/parse_link_label":12}],49:[function(require,module,exports){
+},{"../helpers/parse_link_label":12}],50:[function(require,module,exports){
 // Process footnote references ([^...])
 
 'use strict';
@@ -6738,7 +7148,7 @@ module.exports = function footnote_ref(state, silent) {
   return true;
 };
 
-},{}],50:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 // Process html tags
 
 'use strict';
@@ -6789,7 +7199,7 @@ module.exports = function htmltag(state, silent) {
   return true;
 };
 
-},{"../common/html_re":3}],51:[function(require,module,exports){
+},{"../common/html_re":3}],52:[function(require,module,exports){
 // Process ++inserted text++
 
 'use strict';
@@ -6821,7 +7231,10 @@ module.exports = function ins(state, silent) {
   if (pos !== start + 2) {
     // sequence of 3+ markers taking as literal, same as in a emphasis
     state.pos += pos - start;
-    if (!silent) { state.pending += state.src.slice(start, pos); }
+    if (!silent) {
+      state.pending += state.src.slice(start, pos);
+      state.pendingPos = start
+    }
     return true;
   }
 
@@ -6875,7 +7288,7 @@ module.exports = function ins(state, silent) {
   return true;
 };
 
-},{}],52:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 // Process [links](<to> "stuff")
 
 'use strict';
@@ -7021,19 +7434,29 @@ module.exports = function links(state, silent) {
         src: href,
         title: title,
         alt: state.src.substr(labelStart, labelEnd - labelStart),
-        level: state.level
+        level: state.level,
+        pos: labelStart - 2,
+        content: state.src.slice(labelStart - 2, pos)
       });
+      console.log(state.src.slice(labelStart - 2, pos))
     } else {
       state.push({
         type: 'link_open',
         href: href,
         title: title,
-        level: state.level++
+        level: state.level++,
+        pos: labelStart - 1,
+        content: state.src.substr(labelStart - 1, 1)
       });
       state.linkLevel++;
       state.parser.tokenize(state);
       state.linkLevel--;
-      state.push({ type: 'link_close', level: --state.level });
+      state.push({
+        type: 'link_close',
+        level: --state.level,
+        pos: labelEnd,
+        content: state.src.substr(labelEnd, pos - labelEnd)
+      });
     }
   }
 
@@ -7042,7 +7465,7 @@ module.exports = function links(state, silent) {
   return true;
 };
 
-},{"../helpers/normalize_reference":10,"../helpers/parse_link_destination":11,"../helpers/parse_link_label":12,"../helpers/parse_link_title":13}],53:[function(require,module,exports){
+},{"../helpers/normalize_reference":10,"../helpers/parse_link_destination":11,"../helpers/parse_link_label":12,"../helpers/parse_link_title":13}],54:[function(require,module,exports){
 // Process ==highlighted text==
 
 'use strict';
@@ -7074,7 +7497,10 @@ module.exports = function del(state, silent) {
   if (pos !== start + 2) {
     // sequence of 3+ markers taking as literal, same as in a emphasis
     state.pos += pos - start;
-    if (!silent) { state.pending += state.src.slice(start, pos); }
+    if (!silent) {
+      state.pending += state.src.slice(start, pos);
+      state.pendingPos = start
+    }
     return true;
   }
 
@@ -7128,7 +7554,7 @@ module.exports = function del(state, silent) {
   return true;
 };
 
-},{}],54:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 // Proceess '\n'
 
 'use strict';
@@ -7178,7 +7604,7 @@ module.exports = function newline(state, silent) {
   return true;
 };
 
-},{}],55:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 // Inline parser state
 
 'use strict';
@@ -7195,6 +7621,7 @@ function StateInline(src, parserInline, options, env, outTokens) {
   this.level = 0;
   this.pending = '';
   this.pendingLevel = 0;
+  this.pendingPos = 0;
 
   this.cache = [];        // Stores { start: end } pairs. Useful for backtrack
                           // optimization of pairs parse (emphasis, strikes).
@@ -7221,7 +7648,8 @@ StateInline.prototype.pushPending = function () {
   this.tokens.push({
     type: 'text',
     content: this.pending,
-    level: this.pendingLevel
+    level: this.pendingLevel,
+    pos: this.pendingPos
   });
   this.pending = '';
 };
@@ -7262,7 +7690,7 @@ StateInline.prototype.cacheGet = function (key) {
 
 module.exports = StateInline;
 
-},{}],56:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 // Process ~subscript~
 
 'use strict';
@@ -7322,7 +7750,7 @@ module.exports = function sub(state, silent) {
   return true;
 };
 
-},{}],57:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 // Process ^superscript^
 
 'use strict';
@@ -7382,7 +7810,7 @@ module.exports = function sup(state, silent) {
   return true;
 };
 
-},{}],58:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 // Skip text characters for text token, place those to pending buffer
 // and increment current pos
 
@@ -7430,14 +7858,17 @@ module.exports = function text(state, silent) {
 
   if (pos === state.pos) { return false; }
 
-  if (!silent) { state.pending += state.src.slice(state.pos, pos); }
+  if (!silent) {
+    state.pending += state.src.slice(state.pos, pos);
+    state.pendingPos = state.pos
+  }
 
   state.pos = pos;
 
   return true;
 };
 
-},{}],59:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
     // AMD. Register as an anonymous module.
@@ -7456,9 +7887,9 @@ module.exports = function text(state, silent) {
 
 	/*!
 	 * Autolinker.js
-	 * 0.15.0
+	 * 0.15.2
 	 *
-	 * Copyright(c) 2014 Gregory Jacobs <greg@greg-jacobs.com>
+	 * Copyright(c) 2015 Gregory Jacobs <greg@greg-jacobs.com>
 	 * MIT Licensed. http://www.opensource.org/licenses/mit-license.php
 	 *
 	 * https://github.com/gregjacobs/Autolinker.js
@@ -7650,7 +8081,7 @@ module.exports = function text(state, silent) {
 		 * 
 		 * Ignoring &amp; as it could be part of a query string -- handling it separately.
 		 */
-		htmlCharacterEntitiesRegex: /(&nbsp;|&#160;|&lt;|&#60;|&gt;|&#62;)/gi,
+		htmlCharacterEntitiesRegex: /(&nbsp;|&#160;|&lt;|&#60;|&gt;|&#62;|&quot;|&#34;|&#39;)/gi,
 
 		/**
 		 * @private
@@ -8297,7 +8728,7 @@ module.exports = function text(state, silent) {
 		htmlRegex : (function() {
 			var tagNameRegex = /[0-9a-zA-Z][0-9a-zA-Z:]*/,
 			    attrNameRegex = /[^\s\0"'>\/=\x01-\x1F\x7F]+/,   // the unicode range accounts for excluding control chars, and the delete char
-			    attrValueRegex = /(?:".*?"|'.*?'|[^'"=<>`\s]+)/, // double quoted, single quoted, or unquoted attribute values
+			    attrValueRegex = /(?:"[^"]*?"|'[^']*?'|[^'"=<>`\s]+)/, // double quoted, single quoted, or unquoted attribute values
 			    nameEqualsValueRegex = attrNameRegex.source + '(?:\\s*=\\s*' + attrValueRegex.source + ')?';  // optional '=[value]'
 
 			return new RegExp( [
