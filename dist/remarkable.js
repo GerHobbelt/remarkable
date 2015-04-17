@@ -3246,6 +3246,7 @@ ParserBlock.prototype.tokenize = function (state, startLine, endLine) {
 
   while (line < endLine) {
     state.line = line = state.skipEmptyLines(line);
+    state.blkPos = state.bMarks[state.line];
     if (line >= endLine) {
       break;
     }
@@ -3289,7 +3290,6 @@ ParserBlock.prototype.tokenize = function (state, startLine, endLine) {
       if (line < endLine && state.parentType === 'list' && state.isEmpty(line)) { break; }
       state.line = line;
     }
-    state.blkPos = state.bMarks[state.line];
   }
 };
 
