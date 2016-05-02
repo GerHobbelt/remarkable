@@ -2,7 +2,7 @@
 src line: 205
 
 .
-	foo	baz		bim
+    foo baz     bim
 .
 <pre><code>foo baz     bim
 </code></pre>
@@ -12,8 +12,8 @@ src line: 205
 src line: 212
 
 .
-    a	a
-    ὐ	a
+    a   a
+    ὐ   a
 .
 <pre><code>a   a
 ὐ   a
@@ -3163,7 +3163,7 @@ src line: 3817
 src line: 3826
 
 .
-\	\A\a\ \3\φ\«
+\   \A\a\ \3\φ\«
 .
 <p>\   \A\a\ \3\φ\«</p>
 .
@@ -5546,3 +5546,48 @@ Multiple     spaces
 <p>Multiple     spaces</p>
 .
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src line: 6316
+
+.
+<!-- comment -->
+# title
+.
+<!-- comment -->
+<h1>title</h1>
+.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src line: 6329
+
+.
+<!--
+    comment with
+    multiple lines
+-->
+# title
+.
+<!--
+    comment with
+    multiple lines
+-->
+<h1>title</h1>
+.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src line: 6345
+
+.
+<!--
+    comment with
+    multiple lines
+-->
+
+# title
+.
+<!--
+    comment with
+    multiple lines
+-->
+<h1>title</h1>
+.

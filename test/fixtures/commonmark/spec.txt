@@ -6313,6 +6313,50 @@ Multiple     spaces
 <p>Multiple     spaces</p>
 .
 
+A comment followed by a header:
+
+.
+<!-- comment -->
+# title
+.
+<!-- comment -->
+<h1>title</h1>
+.
+
+
+A multi-line comment followed by a header:
+
+.
+<!--
+    comment with
+    multiple lines
+-->
+# title
+.
+<!--
+    comment with
+    multiple lines
+-->
+<h1>title</h1>
+.
+
+Spaces between comment and header should work likewise:
+
+.
+<!--
+    comment with
+    multiple lines
+-->
+
+# title
+.
+<!--
+    comment with
+    multiple lines
+-->
+<h1>title</h1>
+.
+
 <!-- END TESTS -->
 
 # Appendix A: A parsing strategy {-}
