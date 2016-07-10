@@ -1,4 +1,4 @@
-/*! remarkable 1.6.0 https://github.com//jonschlinkert/remarkable @license MIT */(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Remarkable = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/*! remarkable 1.6.0 https://github.com/jonschlinkert/remarkable @license MIT */(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Remarkable = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // List of valid entities
 //
 // Generate with ./support/entities.js script
@@ -2589,6 +2589,7 @@ module.exports = {
     breaks:       false,        // Convert '\n' in paragraphs into <br>
     langPrefix:   'language-',  // CSS language prefix for fenced blocks
     linkify:      false,        // autoconvert URL-like texts to links
+    linkTarget:   '',           // set target to open link in
 
     // Enable some language-neutral replacements + quotes beautification
     typographer:  false,
@@ -2661,6 +2662,7 @@ module.exports = {
     breaks:       false,        // Convert '\n' in paragraphs into <br>
     langPrefix:   'language-',  // CSS language prefix for fenced blocks
     linkify:      false,        // autoconvert URL-like texts to links
+    linkTarget:   '',           // set target to open link in
 
     // Enable some language-neutral replacements + quotes beautification
     typographer:  false,
@@ -2741,6 +2743,7 @@ module.exports = {
     breaks:       false,        // Convert '\n' in paragraphs into <br>
     langPrefix:   'language-',  // CSS language prefix for fenced blocks
     linkify:      false,        // autoconvert URL-like texts to links
+    linkTarget:   '',           // set target to open link in
 
     // Enable some language-neutral replacements + quotes beautification
     typographer:  false,
@@ -2847,8 +2850,7 @@ module.exports = function parseLinkDestination(state, pos) {
 
     if (code === 0x20) { break; }
 
-    // ascii control characters
-    if (code < 0x20 || code === 0x7F) { break; }
+    if (code > 0x08 && code < 0x0e) { break; }
 
     if (code === 0x5C /* \ */ && pos + 1 < max) {
       pos += 2;
@@ -2870,7 +2872,7 @@ module.exports = function parseLinkDestination(state, pos) {
 
   if (start === pos) { return false; }
 
-  link = normalizeLink(unescapeMd(state.src.slice(start, pos)));
+  link = unescapeMd(state.src.slice(start, pos));
   if (!state.parser.validateLink(link)) { return false; }
 
   state.linkContent = link;
@@ -3014,22 +3016,22 @@ var config = {
 /**
  * The `StateCore` class manages state.
  *
- * @param {Object} `self` Remarkable instance
+ * @param {Object} `instance` Remarkable instance
  * @param {String} `str` Markdown string
  * @param {Object} `env`
  */
 
-function StateCore(self, str, env) {
+function StateCore(instance, str, env) {
   this.src = str;
   this.env = env;
-  this.options = self.options;
+  this.options = instance.options;
   this.tokens = [];
   this.inlineMode = false;
 
-  this.inline = self.inline;
-  this.block = self.block;
-  this.renderer = self.renderer;
-  this.typographer = self.typographer;
+  this.inline = instance.inline;
+  this.block = instance.block;
+  this.renderer = instance.renderer;
+  this.typographer = instance.typographer;
 }
 
 /**
@@ -3962,7 +3964,7 @@ rules.code = function (tokens, idx /*, options, env */) {
  * Fenced code blocks
  */
 
-rules.fence = function (tokens, idx, options, env, self) {
+rules.fence = function (tokens, idx, options, env, instance) {
   var token = tokens[idx];
   var langClass = '';
   var langPrefix = options.langPrefix;
@@ -3980,8 +3982,8 @@ rules.fence = function (tokens, idx, options, env, self) {
 
     fenceName = token.params.split(/\s+/g)[0];
 
-    if (has(self.rules.fence_custom, fenceName)) {
-      return self.rules.fence_custom[fenceName](tokens, idx, options, env, self);
+    if (has(instance.rules.fence_custom, fenceName)) {
+      return instance.rules.fence_custom[fenceName](tokens, idx, options, env, instance);
     }
 
     langName = escapeHtml(replaceEntities(unescapeMd(fenceName)));
@@ -4072,9 +4074,10 @@ rules.paragraph_close = function (tokens, idx /*, options, env */) {
  * Links
  */
 
-rules.link_open = function (tokens, idx /*, options, env */) {
+rules.link_open = function (tokens, idx, options /* env */) {
   var title = tokens[idx].title ? (' title="' + escapeHtml(replaceEntities(tokens[idx].title)) + '"') : '';
-  return '<a href="' + escapeHtml(tokens[idx].href) + '"' + title + '>';
+  var target = options.linkTarget ? (' target="' + options.linkTarget + '"') : '';
+  return '<a href="' + escapeHtml(tokens[idx].href) + '"' + title + target + '>';
 };
 rules.link_close = function (/* tokens, idx, options, env */) {
   return '</a>';
@@ -5639,7 +5642,7 @@ StateBlock.prototype.getLines = function getLines(begin, end, indent, keepLastLF
   // Opt: don't use push queue for single line;
   if (line + 1 === end) {
     first = this.bMarks[line] + Math.min(this.tShift[line], indent);
-    last = keepLastLF ? this.bMarks[end] : this.eMarks[end - 1];
+    last = keepLastLF ? this.eMarks[line] + 1 : this.eMarks[line];
     return this.src.slice(first, last);
   }
 
@@ -6132,7 +6135,7 @@ function createLinkifier() {
     url: true,
     email: true,
     twitter: false,
-    replaceFn: function (autolinker, match) {
+    replaceFn: function (linker, match) {
       // Only collect matched strings but don't change anything.
       switch (match.getType()) {
         /*eslint default-case:0*/
@@ -7422,7 +7425,12 @@ module.exports = function links(state, silent) {
 
     // covers label === '' and label === undefined
     // (collapsed reference link and shortcut reference link respectively)
-    if (!label) { label = state.src.slice(labelStart, labelEnd); }
+    if (!label) {
+      if (typeof label === 'undefined') {
+        pos = labelEnd + 1;
+      }
+      label = state.src.slice(labelStart, labelEnd);
+    }
 
     ref = state.env.references[normalizeReference(label)];
     if (!ref) {
