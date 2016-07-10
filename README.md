@@ -32,6 +32,7 @@ bower install remarkable --save
 **browser (CDN):**
 
 - [jsDeliver CDN](http://www.jsdelivr.com/#!remarkable "jsDelivr CDN")
+- [cdnjs](https://cdnjs.com/libraries/remarkable "cdnjs")
 
 
 ## Usage
@@ -272,6 +273,8 @@ md.use(plugin1)
   .use(plugin3);
 ```
 
+Please refer to the [plugin documentation](doc/plugins.md) to create your own
+plugins.
 
 ## References / Thanks
 
@@ -289,9 +292,10 @@ during this project's development.
 
 ## Development / Modification
 
-Parser consists of several responsibility chains filled with rules. You can
-reconfigure any of them as you wish. Render also can be modified and extended. See
-source code to understand details. Pay attention to these properties:
+[Parser](doc/parser.md) consists of several responsibility chains filled with
+rules. You can reconfigure any of them as you wish. [Renderer](doc/renderer.md) also
+can be modified and extended. See source code to understand details. Pay
+attention to these properties:
 
 ```js
 Remarkable.core
