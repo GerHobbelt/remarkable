@@ -84,6 +84,10 @@ var md = new Remarkable({
   // and smartquotes on. Set doubles to '«»' for Russian, '„“' for German.
   quotes: '“”‘’',
 
+  // Allow loose links reference specified in John Gruber syntax spec
+  // [an example] [id]
+  looseReferenceLinks: true,
+
   // Highlighter function. Should return escaped HTML,
   // or '' if the source string is not changed
   highlight: function (/*str, lang*/) { return ''; }
