@@ -1,4 +1,10 @@
-/*! remarkable 1.6.0 https://github.com/jonschlinkert/remarkable @license MIT */(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Remarkable = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/*! remarkable 1.6.2 https://github.com/jonschlinkert/remarkable @license MIT */(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Remarkable = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/":[function(require,module,exports){
+'use strict';
+
+
+module.exports = require('./lib/');
+
+},{"./lib/":14}],1:[function(require,module,exports){
 // List of valid entities
 //
 // Generate with ./support/entities.js script
@@ -2260,7 +2266,7 @@ var HTML_TAG_RE = replace(/^(?:open_tag|close_tag|comment|processing|declaration
 module.exports.HTML_TAG_RE = HTML_TAG_RE;
 
 },{}],4:[function(require,module,exports){
-// List of valid url schemas, accorting to commonmark spec
+// List of valid url schemas, according to commonmark spec
 // http://jgm.github.io/CommonMark/spec.html#autolinks
 
 'use strict';
@@ -2605,6 +2611,10 @@ module.exports = {
     //
     highlight: null,
 
+    // Allow loose links reference specified in John Gruber syntax spec
+    // [an example] [id]
+    looseReferenceLinks: true,
+
     maxNesting:   20            // Internal protection, recursion limit
   },
 
@@ -2677,6 +2687,10 @@ module.exports = {
     // function (/*str, lang*/) { return ''; }
     //
     highlight: null,
+
+    // Allow loose links reference specified in John Gruber syntax spec
+    // [an example] [id]
+    looseReferenceLinks: true,
 
     maxNesting:   20            // Internal protection, recursion limit
   },
@@ -2758,6 +2772,10 @@ module.exports = {
     // function (/*str, lang*/) { return ''; }
     //
     highlight:     null,
+
+    // Allow loose links reference specified in John Gruber syntax spec
+    // [an example] [id]
+    looseReferenceLinks: true,
 
     maxNesting:    20            // Internal protection, recursion limit
   },
@@ -3910,7 +3928,7 @@ Ruler.prototype.getRules = function (chainName) {
   if (this.__cache__ === null) {
     this.__compile__();
   }
-  return this.__cache__[chainName];
+  return this.__cache__[chainName] || [];
 };
 
 /**
@@ -3964,6 +3982,9 @@ rules.code = function (tokens, idx /*, options, env */) {
  * Fenced code blocks
  */
 
+rules.fence_marker = function (/*tokens, idx, options, env */) {
+  return '';
+};
 rules.fence = function (tokens, idx, options, env, instance) {
   var token = tokens[idx];
   var langClass = '';
@@ -4008,6 +4029,9 @@ rules.fence_custom = {};
  * Headings
  */
 
+rules.heading_marker = function (/*tokens, idx, options, env */) {
+  return '';
+};
 rules.heading_open = function (tokens, idx /*, options, env */) {
   return '<h' + tokens[idx].hLevel + '>';
 };
@@ -4038,6 +4062,9 @@ rules.bullet_list_close = function (tokens, idx /*, options, env */) {
  * List items
  */
 
+rules.list_item_marker = function (/*tokens, idx, options, env */) {
+  return '';
+};
 rules.list_item_open = function (/* tokens, idx, options, env */) {
   return '<li>';
 };
@@ -4090,7 +4117,7 @@ rules.link_close = function (/* tokens, idx, options, env */) {
 rules.image = function (tokens, idx, options /*, env */) {
   var src = ' src="' + escapeHtml(tokens[idx].src) + '"';
   var title = tokens[idx].title ? (' title="' + escapeHtml(replaceEntities(tokens[idx].title)) + '"') : '';
-  var alt = ' alt="' + (tokens[idx].alt ? escapeHtml(replaceEntities(tokens[idx].alt)) : '') + '"';
+  var alt = ' alt="' + (tokens[idx].alt ? escapeHtml(replaceEntities(unescapeMd(tokens[idx].alt))) : '') + '"';
   var suffix = options.xhtmlOut ? ' /' : '';
   return '<img' + src + alt + title + suffix + '>';
 };
@@ -4336,8 +4363,13 @@ function nextToken(tokens, idx) {
 
 var getBreak = rules.getBreak = function getBreak(tokens, idx) {
   idx = nextToken(tokens, idx);
-  if (idx < tokens.length && tokens[idx].type === 'list_item_close') {
-    return '';
+  if (idx < tokens.length) {
+    if (tokens[idx].type === 'list_item_close') {
+      return '';
+    }
+    if (tokens[idx].type === 'fence_marker' && tokens[idx + 1] && tokens[idx + 1].type === 'list_item_close') {
+      return '';
+    }
   }
   return '\n';
 };
@@ -4964,7 +4996,7 @@ module.exports = function heading(state, startLine, endLine, silent) {
   if (pos < max) {
     state.tokens.push({
       type: 'inline',
-      content: state.src.slice(pos, max),
+      content: state.src.slice(pos, max).trim(),
       level: state.level + 1,
       lines: [ startLine, state.line ],
       children: [],
@@ -5040,6 +5072,7 @@ var block_names = require('../common/html_blocks');
 
 var HTML_TAG_OPEN_RE = /^<([a-zA-Z]{1,15})[\s\/>]/;
 var HTML_TAG_CLOSE_RE = /^<\/([a-zA-Z]{1,15})[\s>]/;
+var HTML_COMMENT_CLOSE_RE = /(-->)/;
 
 function isLetter(ch) {
   /*eslint no-bitwise:0*/
@@ -5054,7 +5087,6 @@ module.exports = function htmlblock(state, startLine, endLine, silent) {
       shift = state.tShift[startLine];
 
   pos += shift;
-
   if (!state.options.html) { return false; }
 
   if (shift > 3 || pos + 2 >= max) { return false; }
@@ -5063,12 +5095,20 @@ module.exports = function htmlblock(state, startLine, endLine, silent) {
 
   ch = state.src.charCodeAt(pos + 1);
 
+  var lineMax = state.lineMax;
   if (ch === 0x21/* ! */ || ch === 0x3F/* ? */) {
     // Directive start / comment start / processing instruction start
+    match = state.src.slice(pos).match(HTML_COMMENT_CLOSE_RE);
+    if (match) {
+        var left = state.src.slice(pos + match.index + 3);
+        if (left.length > 1 && left[1] !== '\n') {
+            var lineCount = left.match(/\n/g);
+            lineMax -= (lineCount ? lineCount.length : 0) - 1;
+        }
+    }
     if (silent) { return true; }
 
   } else if (ch === 0x2F/* / */ || isLetter(ch)) {
-
     // Probably start or end of tag
     if (ch === 0x2F/* \ */) {
       // closing tag
@@ -5090,7 +5130,7 @@ module.exports = function htmlblock(state, startLine, endLine, silent) {
   // If we are here - we detected HTML block.
   // Let's roll down till empty line (block end).
   nextLine = startLine + 1;
-  while (nextLine < state.lineMax && !state.isEmpty(nextLine)) {
+  while (nextLine < lineMax && !state.isEmpty(nextLine)) {
     nextLine++;
   }
 
@@ -5345,7 +5385,8 @@ module.exports = function list(state, startLine, endLine, silent) {
     //  ^^^^^ - calculating total length of this thing
     indent = (posAfterMarker - state.bMarks[nextLine]) + indentAfterMarker;
 
-    state.tokens.push({ type: 'list_item_marker',
+    state.tokens.push({
+      type: 'list_item_marker',
       pos: state.bMarks[startLine],
       content: state.src.slice(state.bMarks[startLine], posAfterMarker)
     });
@@ -5358,8 +5399,6 @@ module.exports = function list(state, startLine, endLine, silent) {
       pos: state.bMarks[startLine]
     });
 
-    var preLength = state.tokens.length;
-
     oldIndent = state.blkIndent;
     oldTight = state.tight;
     oldTShift = state.tShift[startLine];
@@ -5371,8 +5410,6 @@ module.exports = function list(state, startLine, endLine, silent) {
     state.blkPos = state.bMarks[startLine];
 
     state.parser.tokenize(state, startLine, endLine, true);
-
-    var postLength = state.tokens.length;
 
     // If any of list item is tight, mark list as tight
     if (!state.tight || prevEmptyEnd) {
@@ -5433,7 +5470,8 @@ module.exports = function list(state, startLine, endLine, silent) {
   // Finilize list
   state.tokens.push({
     type: isOrdered ? 'ordered_list_close' : 'bullet_list_close',
-    level: --state.level
+    level: --state.level,
+    pos: state.tokens[state.tokens.length - 1].pos
   });
   listLines[1] = nextLine;
 
@@ -5481,7 +5519,7 @@ module.exports = function paragraph(state, startLine/*, endLine*/) {
     }
   }
 
-  content = state.getLines(startLine, nextLine, state.blkIndent, false);
+  content = state.getLines(startLine, nextLine, state.blkIndent, false).trim();
 
   state.line = nextLine;
   if (content.length) {
@@ -7406,11 +7444,13 @@ module.exports = function links(state, silent) {
     // do not allow nested reference links
     if (state.linkLevel > 0) { return false; }
 
-    // [foo]  [bar]
-    //      ^^ optional whitespace (can include newlines)
-    for (; pos < max; pos++) {
-      code = state.src.charCodeAt(pos);
-      if (code !== 0x20 && code !== 0x0A) { break; }
+    if (state.options.looseReferenceLinks) {
+      // [foo]  [bar]
+      //      ^^ optional whitespace (can include newlines)
+      for (; pos < max; pos++) {
+        code = state.src.charCodeAt(pos);
+        if (code !== 0x20 && code !== 0x0A) { break; }
+      }
     }
 
     if (pos < max && state.src.charCodeAt(pos) === 0x5B/* [ */) {
@@ -7490,7 +7530,7 @@ module.exports = function links(state, silent) {
 
 'use strict';
 
-module.exports = function del(state, silent) {
+module.exports = function mark(state, silent) {
   var found,
       pos,
       stack,
@@ -10213,11 +10253,5 @@ return Autolinker;
 
 }));
 
-},{}],"/":[function(require,module,exports){
-'use strict';
-
-
-module.exports = require('./lib/');
-
-},{"./lib/":14}]},{},[])("/")
+},{}]},{},[])("/")
 });
