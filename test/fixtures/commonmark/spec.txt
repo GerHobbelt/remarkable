@@ -8859,18 +8859,18 @@ Multiple     spaces
 
 A comment followed by a header:
 
-.
+```````````````````````````````` example
 <!-- comment -->
 # title
 .
 <!-- comment -->
 <h1>title</h1>
-.
+````````````````````````````````
 
 
 A multi-line comment followed by a header:
 
-.
+```````````````````````````````` example
 <!--
     comment with
     multiple lines
@@ -8882,11 +8882,12 @@ A multi-line comment followed by a header:
     multiple lines
 -->
 <h1>title</h1>
-.
+````````````````````````````````
+
 
 Spaces between comment and header should work likewise:
 
-.
+```````````````````````````````` example
 <!--
     comment with
     multiple lines
@@ -8899,7 +8900,8 @@ Spaces between comment and header should work likewise:
     multiple lines
 -->
 <h1>title</h1>
-.
+````````````````````````````````
+
 
 <!-- END TESTS -->
 
