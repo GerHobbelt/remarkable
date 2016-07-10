@@ -4008,7 +4008,7 @@ rules.fence = function (tokens, idx, options, env, instance) {
     }
 
     langName = escapeHtml(replaceEntities(unescapeMd(fenceName)));
-    langClass = ' class="' + langPrefix + langName + '"';
+    langClass = ' class="' + escapeHtml(langPrefix) + langName + '"';
   }
 
   if (options.highlight) {
